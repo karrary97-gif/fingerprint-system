@@ -1,0 +1,6 @@
+pyzk
+requests
+pywebview>=5.3
+pystray
+Pillow
+pyinstaller

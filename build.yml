@@ -1,0 +1,33 @@
+name: Build FPSystem.exe
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Embed bridge key (optional secret FP_KEY)
+        shell: pwsh
+        env:
+          FP_KEY: ${{ secrets.FP_KEY }}
+        run: |
+          if ($env:FP_KEY) { Set-Content -Path app/fp_key.txt -Value $env:FP_KEY.Trim() -NoNewline -Encoding ascii }
+      - run: pyinstaller FPSystem.spec --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FPSystem
+          path: dist/FPSystem.exe
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/FPSystem.exe
